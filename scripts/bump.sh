@@ -1,19 +1,8 @@
 #!/usr/bin/env bash
-plugin_name="$1"
-
-if [ -z "$plugin_name" ]; then
-	echo "Usage: $0 <plugin>"
-	exit 1
-fi
-
-plugin_dir="plugins/$plugin_name"
-if [ ! -d "$plugin_dir" ]; then
-	echo "Plugin directory $plugin_dir doesn't exist"
-	exit 1
-fi
+plugin_name="${1:-hardcover-list}"
 
 cliff() {
-	git cliff --include-path "$plugin_dir"'/**/*' --include-path 'libs/**/*' --tag-pattern "$plugin_name"'-*' $@
+	git cliff --include-path "**/*" --tag-pattern "$plugin_name"'-*' $@
 }
 
 new_tag=$(cliff --bumped-version)

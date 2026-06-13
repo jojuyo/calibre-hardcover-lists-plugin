@@ -1,14 +1,23 @@
-[project]
-name = "calibre-plugins"
-version = "0.0.0"
-description = "Add your description here"
-readme = "README.md"
-authors = [{ name = "Rob Brazier" }]
-requires-python = ">=3.9"
-dependencies = ["pymarkdownlnt>=0.9.29", "pyqt5>=5.15.11"]
+[build-system]
+requires = ["setuptools", "versioningit"]
+build-backend = "setuptools.build_meta"
 
-[tool.uv.workspace]
-members = ["plugins/*", "libs/*"]
+[project]
+name = "hardcover-list"
+dynamic = ["version"]
+description = "Hardcover list membership and ISBN tools for Calibre"
+readme = "README.md"
+authors = [{ name = "Juan York" }]
+license = "GPL-3.0"
+requires-python = ">=3.9"
+dependencies = ["hardcover-list-graphql"]
+
+[project.urls]
+Homepage = "https://hardcover.app/"
+Documentation = "https://docs.hardcover.app/"
+
+[tool.uv.sources]
+hardcover-list-graphql = { path = "lib/graphql" }
 
 [dependency-groups]
 dev = [
@@ -20,12 +29,32 @@ dev = [
     "ruff>=0.8.1",
     "msgpack>=1.1.0",
     "lxml-stubs>=0.5.1",
+    "pymarkdownlnt>=0.9.29",
+    "pyqt5>=5.15.11",
 ]
+
+[tool.versioningit.vcs]
+default-tag = "hardcover-list-0.0.0"
+match = ["hardcover-list-*"]
+decribe-subst = ""
+
+[tool.versioningit.tag2version]
+rmprefix = "hardcover-list-"
+
+[tool.versioningit.write]
+template = '''
+__version__ = "{version}"
+__version_tuple__ = {version_tuple}
+'''
+file = "src/hardcover_list/_version.py"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.coverage.run]
 branch = true
 omit = ["*test*"]
-source = ["libs", "plugins"]
+source = ["src", "lib"]
 
 [tool.pytest.ini_options]
 addopts = "--cov -v --import-mode=importlib"

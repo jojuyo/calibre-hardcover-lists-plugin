@@ -1,41 +1,64 @@
-# calibre-plugins
+# Hardcover List
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/RobBrazier/calibre-plugins/build.yaml)
-[![Codecov](https://img.shields.io/codecov/c/gh/RobBrazier/calibre-plugins)](https://app.codecov.io/gh/RobBrazier/calibre-plugins)
-[![Codacy grade](https://img.shields.io/codacy/grade/11d6e5b88f054995b0321f5437042cf4)](https://app.codacy.com/gh/RobBrazier/calibre-plugins/dashboard)
+Calibre plugin for [Hardcover.app](https://hardcover.app/) list membership and
+ISBN tools:
 
-## Current Plugins
+- **Hardcover Lists** — custom column and context menu for viewing and managing
+  list membership
+- **Cull ISBN** — scan book text for ISBN numbers and pick one to save
 
-- [Hardcover](./plugins/hardcover/): Metadata Plugin for Hardcover.app
-- [Manga Chapter Extractor](./plugins/manga-chapters/) Editor Plugin for
-extracting Manga chapters from the Contents page
+This repository contains a single self-contained plugin. The bundled GraphQL
+client lives under `lib/graphql/` (Python module `hcl_graphql/`) and is included
+in the plugin zip at build time.
 
-## Local Setup
+## Optional: Hardcover metadata plugin
 
-Local setup is automated via [mise-en-place](https://mise.jdx.dev/).
-NOTE: You don't have to use this, just makes things more reproducible and
-isolates your main calibre library from development
+The official [**Hardcover** metadata
+plugin](https://www.mobileread.com/forums/showthread.php?t=364041) is maintained
+separately and can be installed from Calibre's plugin panel. It is **not** part
+of this repo.
 
-You can see all available scripts with `task list`
+If you use both plugins:
 
-### Required tools
+- You can leave the API key blank in **Hardcover Lists** preferences — this
+  plugin will read the key from the metadata plugin's config when available.
+- API rate limits are shared via a lock file (see `lib/graphql/`).
 
-#### Installed via Mise
+## Project layout
 
-1. [uv](https://docs.astral.sh/uv/) - Python Package Manager
-2. [just](https://just.systems) - Task Runner
-3. Python (uv can install this for you with `uv python install`)
+```
+src/hardcover_list/     Calibre plugin package (lists UI, config, cull ISBN)
+lib/graphql/            Bundled Hardcover GraphQL client (module: hcl_graphql)
+scripts/bundle.sh       Builds dist/hardcover-list-<version>.zip
+```
 
-#### Install externally
+## Setup
 
-1. Calibre - to install/run the plugins - Calibre source is downloaded in
-   `just .calibre/source` (called in `just install`)
+Requires [mise](https://mise.jdx.dev/), [uv](https://docs.astral.sh/uv/), and
+[just](https://just.systems). Calibre is installed externally (or via
+`just .calibre/source` during `just install`).
 
-### Running Tests Locally
+```bash
+just install
+just build
+just install-plugin
+```
 
-Tests are run with unstubbed calibre libraries - most of the required config is
-setup by `just setenv` (part of `just install`), however if you are running
-tests outside of `just test`, one manual tweak is needed:
+Restart Calibre after installing. Configure your Hardcover API key under
+**Preferences → Plugins → Hardcover Lists** (unless the metadata plugin already
+provides one).
 
-- Linux / Mac (maybe): you'll need to set `LD_LIBRARY_PATH` to the value of
-  `CALIBRE_LIBRARY_PATH` environment variable (in .env file)
+## Development
+
+```bash
+just test          # lib/graphql unit tests
+just lint
+just bump          # creates a hardcover-list-x.y.z git tag
+```
+
+Release tags use the prefix `hardcover-list-` (for example `hardcover-list-0.1.0`).
+
+## License
+
+GPL-3.0 — see [LICENSE](LICENSE). Derived from the upstream Hardcover metadata
+plugin work by Rob Brazier; Hardcover List plugin by Juan York.

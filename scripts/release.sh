@@ -7,7 +7,7 @@ version="${tag##*-}"
 file="RELEASE_NOTES.md"
 
 git cliff --config cliff.toml \
-	--current --include-path "plugins/$name/**/*"  \
+	--current --include-path "**/*" \
 	--tag-pattern "$name-*" --tag "$tag" --output "$file"
 
 contents="$(cat $file)"
@@ -20,4 +20,4 @@ else
 	opts="--latest"
 fi
 
-gh release create "$tag" $opts -n "$contents" -t "$tag" "dist/$tag"*.zip
+gh release create "$tag" $opts -n "$contents" -t "$tag" dist/hardcover-list-*.zip

@@ -6,7 +6,7 @@ list:
 
 # Install dependencies and configure pre-commit hooks
 install: && setenv
-    uv sync --all-packages
+    uv sync
     uv run lefthook install
     just .calibre/source
 
@@ -29,41 +29,18 @@ clean:
     find . -maxdepth 1 -name '.*cache' -type d -exec rm -rv "{}" \;
     find . -depth -name '*pycache*' -o -name '*.egg-info' -o -name 'build' -type d -exec rm -rv "{}" \;
 
-# Build the specified plugin
-build PLUGIN:
-    bash scripts/bundle.sh {{PLUGIN}}
+# Build the Calibre plugin zip
+build:
+    bash scripts/bundle.sh
 
-# Build all plugins
-build-all:
-    #!/usr/bin/env sh
-    for name in $(ls plugins); do
-        just build $name
-    done
-
-# Build and install a single plugin
-install-plugin PLUGIN:
-    just build {{PLUGIN}}
-    find dist -name {{PLUGIN}}*.zip | xargs calibre-customize --add-plugin
-
-# Build and install all plugins
-install-plugins:
-    #!/usr/bin/env sh
-    for name in $(ls plugins); do
-        just install-plugin $name
-    done
-
-# Run a plugin in CLI mode
-run PLUGIN *ARGS:
-    #!/usr/bin/env sh
-    if [[ ! -f ".calibre/config/plugins/{{titlecase(PLUGIN)}}.zip" ]]; then
-        just install-plugin {{PLUGIN}}
-    fi
-    just .calibre/run -r {{titlecase(PLUGIN)}} -- {{ARGS}}
+# Build and install the plugin
+install-plugin: build
+    find dist -name 'hardcover-list-*.zip' | xargs calibre-customize --add-plugin
 
 # Launch Calibre in Debug mode
 calibre *ARGS:
     just .calibre/run -g {{ARGS}}
 
-# Bump the version for a plugin, following SemVer
-bump PLUGIN:
-    bash scripts/bump.sh {{PLUGIN}}
+# Bump the version, following SemVer
+bump:
+    bash scripts/bump.sh hardcover-list
