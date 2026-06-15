@@ -8,12 +8,19 @@ from calibre.ebooks.oeb.iterator import EbookIterator
 from calibre.utils.logging import GUILog
 
 # Hyphens/dashes often used between ISBN groups (incl. U+2011 non-breaking hyphen in EPUBs).
-# Spaces are intentionally excluded: they appear after the check digit in colophons
-# (e.g. "eISBN: 978-0-345-52269-6   1. Time travel") and cause over-matching.
+# Spaces are intentionally excluded from the *unlabeled* pattern: they appear after the
+# check digit in colophons (e.g. "eISBN: 978-0-345-52269-6   1. Time travel") and cause
+# over-matching.
 _ISBN_SEP = r"\-\.\u00ad\u2010\u2011\u2012\u2013\u2014\u2015\u2212\^"
 _ISBN_BODY = rf"[0-9X][0-9{_ISBN_SEP}]{{8,24}}[0-9X]"
+# After an explicit "ISBN" label, group separators are often plain spaces
+# (e.g. "eISBN: 978 1 0354 3395 7"). Allow horizontal whitespace here; any trailing
+# digits the greedier run picks up (a printer's key, etc.) are trimmed back to the
+# leading valid ISBN in IsbnCollector.add_match.
+_ISBN_SEP_LABELED = _ISBN_SEP + r" \t\u00a0"
+_ISBN_BODY_LABELED = rf"[0-9X][0-9{_ISBN_SEP_LABELED}]{{8,28}}[0-9X]"
 RE_LABELED_ISBN = re.compile(
-    rf"(?i)(?:e[\s\-]*)?ISBN[\s\-]*(?:13|10)?[\s\-:]*({_ISBN_BODY})"
+    rf"(?i)(?:e[\s\-]*)?ISBN[\s\-]*(?:13|10)?[\s\-:]*({_ISBN_BODY_LABELED})"
 )
 RE_ISBN = re.compile(rf"(?<![0-9X])([0-9][0-9{_ISBN_SEP}]{{8,24}}[0-9X])", re.UNICODE)
 RE_STRIP_STYLE = re.compile(r"<style[^>]*>.*?</style>", re.MULTILINE | re.DOTALL)
@@ -143,6 +150,14 @@ class IsbnCollector:
     def add_match(self, original_text: str, *, labeled: bool = False) -> None:
         digits = _extract_digits(original_text)
         coerced = _coerce_isbn(digits)
+        if not coerced and labeled and len(digits) > 13:
+            # A space-separated labeled run can absorb trailing digits (e.g. a
+            # printer's key after the ISBN). Fall back to the leading ISBN.
+            for size in (13, 10):
+                if len(digits) > size:
+                    coerced = _coerce_isbn(digits[:size])
+                    if coerced:
+                        break
         if not coerced:
             return
         isbn, verified = coerced
